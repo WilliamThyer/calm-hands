@@ -37,5 +37,19 @@ class Cam():
 
         while time.time() < start_time + length:
             frame = self.get_image()
-            cv2.imwrite(str(labelled_folder_path/f'{subtitle}{str(uuid.uuid4())}.png'), frame)
+            cv2.imwrite(str(labelled_folder_path/f'{subtitle}{str(time.time()).replace(".",",")}.png'), frame)
             time.sleep(wait)
+    
+    def show_webcam(self, mirror=False):
+
+        while True:
+            _, img = self.capture.read()
+            img = cv2.flip(img, 1)
+            cv2.imshow('Cam', img)
+
+            if cv2.waitKey(1) == 27: 
+                break  # esc to quit
+            if cv2.getWindowProperty('Cam',cv2.WND_PROP_VISIBLE) < 1:        
+                break # click X to close   
+        
+        cv2.destroyAllWindows()
