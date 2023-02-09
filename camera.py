@@ -17,35 +17,42 @@ class Cam():
 
     def make_labelled_folder(self, path='frames/misc'):
 
-        labelled_folder_path = pathlib.Path(label)
+        labelled_folder_path = pathlib.Path(path)
 
         if not os.path.isdir(labelled_folder_path):
             os.mkdir(labelled_folder_path)
 
         return labelled_folder_path
     
-    def write_frame_stream(self, path = 'frames/misc', subtitle = '', length = 5, wait = 1):
+    def write_frame_stream(self, path = 'frames/misc', subtitle = '', length = 5, wait = 1, show_cam=True):
 
         labelled_folder_path = self.make_labelled_folder(path)
 
-        start_time = time.time()
 
+        start_time = time.time()
         while time.time() < start_time + length:
             frame = self.get_image()
             file_name = str(labelled_folder_path/f'{subtitle}{str(time.time()).replace(".",",")}.png')
             cv2.imwrite(file_name, frame)
             time.sleep(wait)
-    
-    def show_webcam(self, mirror=False):
 
-        while True:
-            _, img = self.capture.read()
-            img = cv2.flip(img, 1)
-            cv2.imshow('Cam', img)
-
-            if cv2.waitKey(1) == 27: 
-                break  # esc to quit
-            if cv2.getWindowProperty('Cam',cv2.WND_PROP_VISIBLE) < 1:        
-                break # click X to close   
+            if show_cam:
+                self.show_webcam()
+                if self.check_close_cam():
+                    cv2.destroyAllWindows()
         
-        cv2.destroyAllWindows()
+        if show_cam:
+            cv2.destroyAllWindows()
+
+    def show_webcam(self):
+
+        _, img = self.capture.read()
+        img = cv2.flip(img, 1)
+        cv2.imshow('Cam', img)
+
+    def check_close_cam(self):
+    
+        if cv2.waitKey(1) == 27:
+            return close
+        if cv2.getWindowProperty('Cam',cv2.WND_PROP_VISIBLE) < 1:
+            return close
