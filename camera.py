@@ -2,17 +2,12 @@ import cv2
 import pathlib
 import os
 import time
-import uuid
 
 class Cam():
 
-    def __init__(self, base_folder = 'frames'):
+    def __init__(self):
 
         self.capture = cv2.VideoCapture(0)
-        self.base_path = pathlib.Path(base_folder)
-
-        if not os.path.isdir(self.base_path):
-            os.mkdir(self.base_path)
 
     def get_image(self):
         
@@ -20,24 +15,25 @@ class Cam():
         
         return frame
 
-    def make_labelled_folder(self, label='misc'):
+    def make_labelled_folder(self, path='frames/misc'):
 
-        labelled_folder_path = self.base_path / label
+        labelled_folder_path = pathlib.Path(label)
 
         if not os.path.isdir(labelled_folder_path):
             os.mkdir(labelled_folder_path)
 
         return labelled_folder_path
     
-    def write_frame_stream(self, label = 'misc', subtitle = '', length = 5, wait = 1):
+    def write_frame_stream(self, path = 'frames/misc', subtitle = '', length = 5, wait = 1):
 
-        labelled_folder_path = self.make_labelled_folder(label)
+        labelled_folder_path = self.make_labelled_folder(path)
 
         start_time = time.time()
 
         while time.time() < start_time + length:
             frame = self.get_image()
-            cv2.imwrite(str(labelled_folder_path/f'{subtitle}{str(time.time()).replace(".",",")}.png'), frame)
+            file_name = str(labelled_folder_path/f'{subtitle}{str(time.time()).replace(".",",")}.png')
+            cv2.imwrite(file_name, frame)
             time.sleep(wait)
     
     def show_webcam(self, mirror=False):
