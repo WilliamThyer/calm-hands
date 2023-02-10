@@ -20,14 +20,13 @@ class Cam():
         labelled_folder_path = pathlib.Path(path)
 
         if not os.path.isdir(labelled_folder_path):
-            os.mkdir(labelled_folder_path)
+            os.makedirs(labelled_folder_path)
 
         return labelled_folder_path
     
     def write_frame_stream(self, path = 'frames/misc', subtitle = '', length = 5, wait = 1, show_cam=True):
 
         labelled_folder_path = self.make_labelled_folder(path)
-
 
         start_time = time.time()
         while time.time() < start_time + length:
