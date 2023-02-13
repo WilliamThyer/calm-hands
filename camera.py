@@ -51,10 +51,10 @@ class Cam():
         cv2.imshow('Cam', img)
 
     def check_close_cam(self):
-    
+        
         if cv2.waitKey(1) == 27:
-            return True 
+            cv2.destroyAllWindows()
+            return True
         if cv2.getWindowProperty('Cam',cv2.WND_PROP_VISIBLE) < 1:
-            return True 
-        else:
-            return False
+            cv2.destroyAllWindows()
+            return True
