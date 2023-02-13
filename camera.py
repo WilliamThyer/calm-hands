@@ -39,6 +39,7 @@ class Cam():
                 self.show_webcam()
                 if self.check_close_cam():
                     cv2.destroyAllWindows()
+                    break
         
         if show_cam:
             cv2.destroyAllWindows()
