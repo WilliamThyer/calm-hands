@@ -15,9 +15,10 @@ class Cam():
         
         return frame
     
-    def write_image(self,labelled_folder_path,subtitle):
+    def write_frame(self,frame,labelled_folder_path,subtitle=''):
         
-        frame = self.get_image()
+        labelled_folder_path = self.make_labelled_folder(labelled_folder_path)
+        
         file_name = str(labelled_folder_path/f'{subtitle}{str(time.time()).replace(".",",")}.png')
         cv2.imwrite(file_name, frame)
 
@@ -37,7 +38,8 @@ class Cam():
         start_time = time.time()
         while time.time() < start_time + length:
             
-            self.write_image(labelled_folder_path, subtitle)
+            frame = self.get_image()
+            self.write_image(frame,labelled_folder_path, subtitle)
             time.sleep(wait)
 
             if show_cam:
@@ -54,6 +56,13 @@ class Cam():
         _, img = self.capture.read()
         img = cv2.flip(img, 1)
         cv2.imshow('Cam', img)
+    
+    def get_path_from_keypress(key_press_dict):
+
+        press = cv2.waitKey(1)
+
+        if press in key_press_dict:
+            return key_press_dict[press]
 
     def check_close_cam(self):
         
