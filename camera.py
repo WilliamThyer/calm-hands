@@ -14,6 +14,12 @@ class Cam():
         _, frame = self.capture.read()
         
         return frame
+    
+    def write_image(self,labelled_folder_path,subtitle):
+        
+        frame = self.get_image()
+        file_name = str(labelled_folder_path/f'{subtitle}{str(time.time()).replace(".",",")}.png')
+        cv2.imwrite(file_name, frame)
 
     def make_labelled_folder(self, path='frames/misc'):
 
@@ -30,9 +36,8 @@ class Cam():
 
         start_time = time.time()
         while time.time() < start_time + length:
-            frame = self.get_image()
-            file_name = str(labelled_folder_path/f'{subtitle}{str(time.time()).replace(".",",")}.png')
-            cv2.imwrite(file_name, frame)
+            
+            self.write_image(labelled_folder_path, subtitle)
             time.sleep(wait)
 
             if show_cam:
