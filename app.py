@@ -5,9 +5,10 @@ import cv2
 import PIL.Image as Image, PIL.ImageTk as ImageTk
 import time
 import numpy as np
+from dummy_model import DummyModel
 
-from fastai.vision.all import *
-from fastai.vision.utils import *
+# from fastai.vision.all import *
+# from fastai.vision.utils import *
 
 # Weird path stuff for fastai
 import pathlib
@@ -20,7 +21,7 @@ def label_func(self,name):
 
 class App:
     
-    def __init__(self):
+    def __init__(self, dummy=False):
         # initialize variables
         self.cap = None
         self.window = None
@@ -30,11 +31,17 @@ class App:
         self.button2 = None
         self.pred_probs = []
         self.model = None
+        self.dummy = dummy
+        if dummy:
+            global load_learner 
     
     def load_model(self,model_path = 'edgenext_model.pkl'):
         # load pretrained model
         print('Loading model...')
-        model = load_learner(model_path,cpu=True)
+        if self.dummy:
+            model = DummyModel()
+        else:
+            model = load_learner(model_path,cpu=True)
         print('Model loaded!')
         return model
 
@@ -46,8 +53,7 @@ class App:
     
     def do_prediction(self,frame):
         # do prediction on frame
-        with self.model.no_bar(), self.model.no_logging():
-            return self.model.predict(frame)
+        return self.model.predict(frame,no_bar=True)
 
     def start(self):
         # start the window 
@@ -149,5 +155,5 @@ class App:
         return self
 
 if __name__ == '__main__':
-    app = App()
+    app = App(dummy=True)
     app.run() 
