@@ -6,6 +6,18 @@ import PIL.Image as Image, PIL.ImageTk as ImageTk
 import time
 import numpy as np
 
+from fastai.vision.all import *
+from fastai.vision.utils import *
+
+# Weird path stuff for fastai
+import pathlib
+temp = pathlib.PosixPath
+pathlib.PosixPath = pathlib.WindowsPath
+
+def label_func(self,name):
+    # get label from file name (needed for fastai)
+    return name.parent.name
+
 class App:
     
     def __init__(self):
@@ -16,9 +28,27 @@ class App:
         self.text = None
         self.button = None
         self.button2 = None
-        self.button4 = None
         self.pred_probs = []
-        
+        self.model = None
+    
+    def load_model(self,model_path = 'edgenext_model.pkl'):
+        # load pretrained model
+        print('Loading model...')
+        model = load_learner(model_path,cpu=True)
+        print('Model loaded!')
+        return model
+
+    def create_output(self,pred):
+        # create output string
+        conf = round(float(pred[2][pred[1]])*100,2) 
+        output = f'The model is {conf}% confident that you are {pred[0]}' 
+        return output
+    
+    def do_prediction(self,frame):
+        # do prediction on frame
+        with self.model.no_bar(), self.model.no_logging():
+            return self.model.predict(frame)
+
     def start(self):
         # start the window 
         self.window = tk.Tk()
@@ -31,20 +61,18 @@ class App:
         self.create_stop_button()
         self.add_text()
         self.create_chart()
+        self.model = self.load_model()
     
     def add_text(self):
-        self.text = tk.Label(self.window, text="Hello World", fg="black", bg="white")
+        self.text = tk.Label(self.window, text="", fg="black", bg="white")
         self.text.pack()
         
     def update_text(self,text):
         self.text.configure(text=text)
     
-    def update_prediction(self):
-        return np.random.choice(["Biting Nails","Not Biting Nails"]), np.random.random(1)
-
     def show_frame(self):
-        _, frame = self.cap.read()
-        frame = cv2.flip(frame, 1)
+        _, raw_frame = self.cap.read()
+        frame = cv2.flip(raw_frame, 1)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame = cv2.resize(frame, (640, 480))
         frame = Image.fromarray(frame) # convert to PIL image
@@ -53,15 +81,18 @@ class App:
         self.video_frame._image_cache = frame # avoid garbage collection
         self.window.after(15, self.show_frame) # 15 ms delay
 
-        pred,pred_prob = self.update_prediction()
-        self.pred_probs.append(pred_prob)
+        if self.model is not None:
+            pred = self.do_prediction(raw_frame)
+            pred_prob = float(pred[2][pred[1]])
+            self.pred_probs.append(pred_prob)
+            pred_str = self.create_output(pred)
+        else:
+            pred_str = "Loading model..."
 
-        self.update_text(pred)
-        self.update_chart()
+        self.update_text(pred_str)
         
     def start_webcam(self):
         # start webcam feed
-        print(self.cap) 
         if self.cap is None:
             self.cap = cv2.VideoCapture(0) # 0 is the default camera
             self.show_frame()
