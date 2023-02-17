@@ -57,7 +57,7 @@ class Cam():
         img = cv2.flip(img, 1)
         cv2.imshow('Cam', img)
     
-    def get_path_from_keypress(key_press_dict):
+    def get_path_from_keypress(self,key_press_dict):
 
         press = cv2.waitKey(1)
 
