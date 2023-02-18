@@ -7,8 +7,8 @@ import time
 import numpy as np
 from dummy_model import DummyModel
 
-# from fastai.vision.all import *
-# from fastai.vision.utils import *
+from fastai.vision.all import *
+from fastai.vision.utils import *
 
 # Weird path stuff for fastai
 import pathlib
@@ -53,7 +53,8 @@ class App:
     
     def do_prediction(self,frame):
         # do prediction on frame
-        return self.model.predict(frame,no_bar=True)
+        with self.model.no_bar():
+            return self.model.predict(frame)
 
     def start(self):
         # start the window 
@@ -77,8 +78,9 @@ class App:
         self.text.configure(text=text)
     
     def show_frame(self):
-        _, raw_frame = self.cap.read()
-        frame = cv2.flip(raw_frame, 1)
+
+        _, self.raw_frame = self.cap.read()
+        frame = cv2.flip(self.raw_frame, 1)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame = cv2.resize(frame, (640, 480))
         frame = Image.fromarray(frame) # convert to PIL image
@@ -86,22 +88,26 @@ class App:
         self.video_frame.configure(image=frame) # display the image
         self.video_frame._image_cache = frame # avoid garbage collection
         self.window.after(15, self.show_frame) # 15 ms delay
-
+    
+    def predict(self):
+        # predict on webcam feed
         if self.model is not None:
-            pred = self.do_prediction(raw_frame)
+            pred = self.do_prediction(self.raw_frame)
             pred_prob = float(pred[2][pred[1]])
             self.pred_probs.append(pred_prob)
             pred_str = self.create_output(pred)
         else:
             pred_str = "Loading model..."
-
-        self.update_text(pred_str)
         
+        self.update_text(pred_str)
+        self.window.after(500, self.predict)
+
     def start_webcam(self):
         # start webcam feed
         if self.cap is None:
             self.cap = cv2.VideoCapture(0) # 0 is the default camera
             self.show_frame()
+            self.predict()
     
     def stop_webcam(self):
         # stop webcam feed
@@ -155,5 +161,5 @@ class App:
         return self
 
 if __name__ == '__main__':
-    app = App(dummy=True)
+    app = App(dummy=False)
     app.run() 
