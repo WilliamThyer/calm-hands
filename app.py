@@ -105,10 +105,9 @@ class App:
         # predict on webcam feed
         if (self.model) and (self.run_preds):
             pred = self.do_prediction(self.raw_frame)
-            pred_prob = float(pred[2][pred[1]])
-            self.pred_probs.append(pred_prob)
+            self.pred_probs.append(float(pred[2][1])) # probability of good
             pred_str = self.create_output(pred)
-            self.play_sound(pred, pred_prob)
+            self.play_sound(pred, pred[2][pred[1]])
         else:
             pred_str = "Paused"
         
@@ -178,6 +177,7 @@ class App:
         # shade upper half of plot green
         ax.fill_between(np.arange(0,self.max_time), .5, 1, facecolor='green', alpha=0.2, zorder=-2)
         ax.fill_between(np.arange(0,self.max_time), 0, .5, facecolor='red', alpha=0.2, zorder=-2)
+        ax.fill_between(np.arange(0,self.max_time), 0, .2, facecolor='red', alpha=0.2, zorder=-2)
 
         plt.tight_layout()
 
