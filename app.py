@@ -69,7 +69,7 @@ class App:
         self.sound = mixer.Sound("alert.wav")
     
     def play_sound(self, pred, pred_prob):
-        if (pred_prob > 0.8) and (pred[0] == 'bad'):
+        if (pred_prob > 0.75) and (pred[0] == 'bad'):
             self.sound.play()
 
     # TEXT STUFF
@@ -150,53 +150,54 @@ class App:
     def format_preds_for_plot(self, preds):
 
         if len(preds) > self.max_time*self.hz:
-            preds = preds[:self.max_time*self.hz]
+            preds = preds[-self.max_time*self.hz:]
         if len(preds) == 0:
             preds = [0]
         times = np.arange(0,len(preds)/self.hz,1/self.hz)
-        return pd.DataFrame({'times':times,'preds':preds}) 
+        return preds, times
     
-    def make_plot(self, df):
+    def make_plot(self, preds, times):
 
         fig, ax = plt.subplots(figsize=(6.4,4.8),dpi=100)
 
-        sns.lineplot(
-            data=df,x='times',y='preds', ax=ax,
-            color='black',zorder=2,linewidth=1.75)
-        sns.lineplot(data=df,x='times',y='preds', color='white',zorder=1,linewidth=5)
+        ax.plot(times,preds,color='black',zorder=2,linewidth=1.75)
+        ax.plot(times,preds, color='white',zorder=1,linewidth=5)
 
-        sns.despine(left=False, bottom=False)
+        ax.spines[['right', 'top']].set_visible(False)
         ax.set(xlabel='Time (s)',ylabel='');
         ax.set_ylim(0,1)
         ax.set_xlim(0,self.max_time)
         ax.set_yticks([])
 
         plt.text(-.02, 0.75, 'Good', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes,rotation=90)
-        plt.text(-.02, 0.25, 'Bad', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes,rotation=90)
+        plt.text(-.02, 0.125, 'Bad', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes,rotation=90)
 
         # shade upper half of plot green
-        ax.fill_between(np.arange(0,self.max_time), .5, 1, facecolor='green', alpha=0.2, zorder=-2)
-        ax.fill_between(np.arange(0,self.max_time), 0, .5, facecolor='red', alpha=0.2, zorder=-2)
-        ax.fill_between(np.arange(0,self.max_time), 0, .2, facecolor='red', alpha=0.2, zorder=-2)
+        ax.fill_between(np.arange(0,self.max_time+1), .5, 1, facecolor='green', alpha=0.2, zorder=-2)
+        ax.fill_between(np.arange(0,self.max_time+1), 0, .5, facecolor='red', alpha=0.2, zorder=-2)
+        ax.fill_between(np.arange(0,self.max_time+1), 0, .2, facecolor='red', alpha=0.2, zorder=-2)
 
         plt.tight_layout()
 
         return fig
 
     def create_plot(self):
-        # plotting the graph
-        fig = self.make_plot(self.format_preds_for_plot(self.pred_probs))
-            
-        # creating the Tkinter canvas containing the Matplotlib figure
-        canvas = FigureCanvasTkAgg(fig, master = self.window)  
-        canvas.draw()
 
-        plt.close(fig)
-    
-        # placing the canvas on the Tkinter window
-        canvas.get_tk_widget().grid(row=1, column=1, padx=10, pady=2)
+        if self.run_preds:
+            # plotting the graph
+            preds, times = self.format_preds_for_plot(self.pred_probs)
+            fig = self.make_plot(preds, times)
+                
+            # creating the Tkinter canvas containing the Matplotlib figure
+            canvas = FigureCanvasTkAgg(fig, master = self.window)  
+            canvas.draw()
 
-        self.window.after(500, self.create_plot)
+            plt.close(fig)
+        
+            # placing the canvas on the Tkinter window
+            canvas.get_tk_widget().grid(row=1, column=1, padx=10, pady=2)
+
+        self.window.after(1000, self.create_plot)
 
     # BUTTONS
     def create_show_vid_button(self):
