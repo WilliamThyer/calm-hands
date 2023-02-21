@@ -2,7 +2,7 @@
 
 By William Thyer, 2023
 
-<img src="gui_screenshots/demo.gif" alt="drawing" height="400"/>
+<img src="gui_screenshots/demo.gif" alt="drawing" height="400" width="800"/>
 
 Calm Hands helps the user reduce nail-biting during computer use. It provides realtime feedback about nail-biting habits using a deep neural net that monitors images from your webcam stream. This process is entirely local and images are never saved. Feedback is provided through audio and visual cues to alert you of when you are biting your nails. Realtime data visualization is provided as well.
 
