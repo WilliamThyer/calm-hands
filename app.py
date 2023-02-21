@@ -27,18 +27,19 @@ class App:
         self.cap = None
         self.window = None
         self.video_frame = None
-        self.text = None
-        self.button = None
-        self.button2 = None
         self.pred_probs = []
         self.model = None
         self.run_preds = True
+        self.show_webcam = True
         self.dummy = dummy
         if dummy:
             global load_learner
+        self.load_sound()
+
+    def load_sound(self):
         mixer.init()
         self.sound = mixer.Sound("alert.wav")
-    
+
     def load_model(self,model_path = 'edgenext_model.pkl'):
         # load pretrained model
         print('Loading model...')
@@ -68,8 +69,8 @@ class App:
         self.window.configure(background='black')
         self.video_frame = tk.Label(self.window)
         self.video_frame.pack()
-        self.create_start_button()
-        self.create_stop_button()
+        self.create_show_vid_button()
+        self.create_run_preds_button()
         self.add_text()
         # self.create_chart()
         self.model = self.load_model()
@@ -84,13 +85,14 @@ class App:
     def show_frame(self):
 
         _, self.raw_frame = self.cap.read()
-        frame = cv2.flip(self.raw_frame, 1)
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frame = cv2.resize(frame, (640, 480))
-        frame = Image.fromarray(frame) # convert to PIL image
-        frame = ImageTk.PhotoImage(frame) # convert to PhotoImage
-        self.video_frame.configure(image=frame) # display the image
-        self.video_frame._image_cache = frame # avoid garbage collection
+        if self.show_webcam:
+            frame = cv2.flip(self.raw_frame, 1)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame = cv2.resize(frame, (640, 480))
+            frame = Image.fromarray(frame) # convert to PIL image
+            frame = ImageTk.PhotoImage(frame) # convert to PhotoImage
+            self.video_frame.configure(image=frame) # display the image
+            self.video_frame._image_cache = frame # avoid garbage collection
         self.window.after(15, self.show_frame) # 15 ms delay
     
     def switch_run_preds(self):
@@ -99,6 +101,13 @@ class App:
             self.run_preds = True
         else:
             self.run_preds = False
+
+    def switch_show_webcam(self):
+
+        if self.show_webcam is False:
+            self.show_webcam = True
+        else:
+            self.show_webcam = False
 
     def predict(self):
         # predict on webcam feed
@@ -117,7 +126,6 @@ class App:
     
     def play_sound(self, pred, pred_prob):
         if (pred_prob > 0.8) and (pred[0] == 'bad'):
-            print('playing sound')
             self.sound.play()
 
     def start_webcam(self):
@@ -177,19 +185,14 @@ class App:
     
     #     # placing the toolbar on the Tkinter window
     #     canvas.get_tk_widget().pack()
-
     
-    def create_start_button(self):
-        self.button = tk.Button(self.window, text="Start", command=self.start_webcam)
-        self.button.pack()
+    def create_show_vid_button(self):
+        self.show_vid_button = tk.Button(self.window, text="Show/Hide Video", command=self.switch_show_webcam)
+        self.show_vid_button.pack()
     
-    def create_stop_button(self):
-        self.button2 = tk.Button(self.window, text="Stop", command=self.stop_webcam)
-        self.button2.pack()
-    
-    def create_button4(self):
-        self.button4 = tk.Button(self.window, text="Run", command=self.run_preds)
-        self.button4.pack()
+    def create_run_preds_button(self):
+        self.preds_button = tk.Button(self.window, text="Play/Pause Predictions", command=self.switch_run_preds)
+        self.preds_button.pack()
         
     def __del__(self):
         self.stop_webcam()
