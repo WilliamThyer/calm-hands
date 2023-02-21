@@ -67,8 +67,8 @@ class App:
         self.window.title("Calm Hands")
         self.window.resizable(100,100)
         self.window.configure(background='black')
-        self.video_frame = tk.Label(self.window)
-        self.video_frame.pack()
+        self.video_frame = tk.Label(self.window, bg="black")
+        self.video_frame.pack(fill=tk.BOTH, expand=1)
         self.create_show_vid_button()
         self.create_run_preds_button()
         self.add_text()
@@ -76,7 +76,7 @@ class App:
         self.model = self.load_model()
     
     def add_text(self):
-        self.text = tk.Label(self.window, text="", fg="black", bg="white")
+        self.text = tk.Label(self.window, text="", fg="white", bg="black")
         self.text.pack()
         
     def update_text(self,text):
@@ -94,20 +94,6 @@ class App:
             self.video_frame.configure(image=frame) # display the image
             self.video_frame._image_cache = frame # avoid garbage collection
         self.window.after(15, self.show_frame) # 15 ms delay
-    
-    def switch_run_preds(self):
-
-        if self.run_preds is False:
-            self.run_preds = True
-        else:
-            self.run_preds = False
-
-    def switch_show_webcam(self):
-
-        if self.show_webcam is False:
-            self.show_webcam = True
-        else:
-            self.show_webcam = False
 
     def predict(self):
         # predict on webcam feed
@@ -186,13 +172,29 @@ class App:
     #     # placing the toolbar on the Tkinter window
     #     canvas.get_tk_widget().pack()
     
+    def switch_run_preds(self):
+
+        if self.run_preds is False:
+            self.run_preds = True
+        else:
+            self.run_preds = False
+
+    def switch_show_webcam(self):
+
+        if self.show_webcam is False:
+            self.show_webcam = True
+        else:
+            self.show_webcam = False
+            self.video_frame.configure(image='')
+            self.video_frame._image_cache = None
+    
     def create_show_vid_button(self):
         self.show_vid_button = tk.Button(self.window, text="Show/Hide Video", command=self.switch_show_webcam)
-        self.show_vid_button.pack()
+        self.show_vid_button.pack(side=tk.LEFT)
     
     def create_run_preds_button(self):
         self.preds_button = tk.Button(self.window, text="Play/Pause Predictions", command=self.switch_run_preds)
-        self.preds_button.pack()
+        self.preds_button.pack(side=tk.LEFT)
         
     def __del__(self):
         self.stop_webcam()
