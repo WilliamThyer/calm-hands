@@ -1,5 +1,3 @@
-## tkinter app that opens a window and displays your webcam feed
-
 import tkinter as tk
 import cv2
 import PIL.Image as Image, PIL.ImageTk as ImageTk
