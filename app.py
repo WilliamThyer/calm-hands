@@ -49,6 +49,12 @@ class App:
         self.show_frame()
         self.predict()
 
+    def create_window(self):
+        self.window = tk.Tk()
+        self.window.title("Calm Hands")
+        self.window.resizable(100,100)
+        self.window.configure(background='black')
+
     # SOUND STUFF
     def load_sound(self):
         mixer.init()
@@ -58,20 +64,10 @@ class App:
         if (pred_prob > 0.8) and (pred[0] == 'bad'):
             self.sound.play()
 
-    # GUI STUFF
-    def create_window(self):
-        self.window = tk.Tk()
-        self.window.title("Calm Hands")
-        self.window.resizable(100,100)
-        self.window.configure(background='black')
-    
-    def create_video(self):
-        self.video_frame = tk.Label(self.window, bg="black")
-        self.video_frame.pack()
-
+    # TEXT STUFF
     def create_text(self):
         self.text = tk.Label(self.window, text="", fg="white", bg="black")
-        self.text.pack()
+        self.text.grid(row=0, column=0, padx=10, pady=2)
         
     def update_text(self,text):
         self.text.configure(text=text)
@@ -113,6 +109,11 @@ class App:
         self.window.after(500, self.predict)
 
     # VIDEO STUFF
+
+    def create_video(self):
+        self.video_frame = tk.Label(self.window, bg="black")
+        self.video_frame.grid(row=1, column=0, padx=10, pady=2)
+
     def show_frame(self):
 
         _, self.raw_frame = self.cap.read()
@@ -143,7 +144,7 @@ class App:
     # CHART STUFF
     def create_chart(self):
         self.chart = tk.Canvas(self.window, width=680, height=480)
-        self.chart.pack(side=tk.RIGHT)
+        self.chart.grid(row=1, column=1, padx=10, pady=2)
     
     # def create_plot(self):
     #     # the figure that will contain the plot
@@ -178,11 +179,11 @@ class App:
     # BUTTONS
     def create_show_vid_button(self):
         self.show_vid_button = tk.Button(self.window, text="Show/Hide Video", command=self.switch_show_webcam)
-        self.show_vid_button.pack(side=tk.LEFT)
+        self.show_vid_button.grid(row=2, column=0, padx=10, pady=2)
     
     def create_run_preds_button(self):
         self.preds_button = tk.Button(self.window, text="Play/Pause Predictions", command=self.switch_run_preds)
-        self.preds_button.pack(side=tk.LEFT)
+        self.preds_button.grid(row=2, column=1, padx=10, pady=2)
     
     def switch_run_preds(self):
 
