@@ -23,7 +23,7 @@ def label_func(self,name):
 class App:
     
     def __init__(self, dummy=False):
-        # initialize variables
+        
         self.cap = None
         self.window = None
         self.video_frame = None
@@ -35,20 +35,56 @@ class App:
         if dummy:
             global load_learner
         self.load_sound()
+    
+    def start(self):
 
+        self.create_window()
+        self.create_video()
+        self.create_show_vid_button()
+        self.create_run_preds_button()
+        self.create_text()
+        self.create_chart()
+        self.load_model()
+        self.start_webcam()
+        self.show_frame()
+        self.predict()
+
+    # SOUND STUFF
     def load_sound(self):
         mixer.init()
         self.sound = mixer.Sound("alert.wav")
+    
+    def play_sound(self, pred, pred_prob):
+        if (pred_prob > 0.8) and (pred[0] == 'bad'):
+            self.sound.play()
 
+    # GUI STUFF
+    def create_window(self):
+        self.window = tk.Tk()
+        self.window.title("Calm Hands")
+        self.window.resizable(100,100)
+        self.window.configure(background='black')
+    
+    def create_video(self):
+        self.video_frame = tk.Label(self.window, bg="black")
+        self.video_frame.pack()
+
+    def create_text(self):
+        self.text = tk.Label(self.window, text="", fg="white", bg="black")
+        self.text.pack()
+        
+    def update_text(self,text):
+        self.text.configure(text=text)
+
+    # MODEL STUFF
     def load_model(self,model_path = 'edgenext_model.pkl'):
         # load pretrained model
         print('Loading model...')
         if self.dummy:
-            model = DummyModel()
+            self.model = DummyModel()
         else:
-            model = load_learner(model_path,cpu=True)
+            self.model = load_learner(model_path,cpu=True)
         print('Model loaded!')
-        return model
 
     def create_output(self,pred):
         # create output string
@@ -60,40 +96,6 @@ class App:
         # do prediction on frame
         with self.model.no_bar():
             return self.model.predict(frame)
-
-    def start(self):
-        # start the window 
-        self.window = tk.Tk()
-        self.window.title("Calm Hands")
-        self.window.resizable(100,100)
-        self.window.configure(background='black')
-        self.video_frame = tk.Label(self.window, bg="black")
-        self.video_frame.pack(fill=tk.BOTH, expand=1)
-        self.create_show_vid_button()
-        self.create_run_preds_button()
-        self.add_text()
-        # self.create_chart()
-        self.model = self.load_model()
-    
-    def add_text(self):
-        self.text = tk.Label(self.window, text="", fg="white", bg="black")
-        self.text.pack()
-        
-    def update_text(self,text):
-        self.text.configure(text=text)
-    
-    def show_frame(self):
-
-        _, self.raw_frame = self.cap.read()
-        if self.show_webcam:
-            frame = cv2.flip(self.raw_frame, 1)
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame = cv2.resize(frame, (640, 480))
-            frame = Image.fromarray(frame) # convert to PIL image
-            frame = ImageTk.PhotoImage(frame) # convert to PhotoImage
-            self.video_frame.configure(image=frame) # display the image
-            self.video_frame._image_cache = frame # avoid garbage collection
-        self.window.after(15, self.show_frame) # 15 ms delay
 
     def predict(self):
         # predict on webcam feed
@@ -109,18 +111,27 @@ class App:
         self.update_text(pred_str)
 
         self.window.after(500, self.predict)
-    
-    def play_sound(self, pred, pred_prob):
-        if (pred_prob > 0.8) and (pred[0] == 'bad'):
-            self.sound.play()
 
+    # VIDEO STUFF
+    def show_frame(self):
+
+        _, self.raw_frame = self.cap.read()
+        if self.show_webcam:
+            frame = cv2.flip(self.raw_frame, 1)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame = cv2.resize(frame, (640, 480))
+            frame = Image.fromarray(frame) # convert to PIL image
+            frame = ImageTk.PhotoImage(frame) # convert to PhotoImage
+            self.video_frame.configure(image=frame) # display the image
+            self.video_frame._image_cache = frame # avoid garbage collection
+        
+        self.window.after(15, self.show_frame) # 15 ms delay
+    
     def start_webcam(self):
         # start webcam feed
         if self.cap is None:
             print('Starting webcam...')
             self.cap = cv2.VideoCapture(0) # 0 is the default camera
-            self.show_frame()
-            self.predict()
     
     def stop_webcam(self):
         # stop webcam feed
@@ -128,19 +139,11 @@ class App:
         self.video_frame.configure(image='')
         self.video_frame._image_cache = None
         self.cap = None
-        self.update_text("Stopped")
     
-    def close_window(self):
-        self.window.destroy()
-    
-    def run(self):
-        self.start()
-        self.start_webcam()
-        self.window.mainloop()
-        
-    # def create_chart(self):
-    #     self.chart = tk.Canvas(self.window, width=200, height=100)
-    #     self.chart.pack()
+    # CHART STUFF
+    def create_chart(self):
+        self.chart = tk.Canvas(self.window, width=680, height=480)
+        self.chart.pack(side=tk.RIGHT)
     
     # def create_plot(self):
     #     # the figure that will contain the plot
@@ -171,6 +174,15 @@ class App:
     
     #     # placing the toolbar on the Tkinter window
     #     canvas.get_tk_widget().pack()
+
+    # BUTTONS
+    def create_show_vid_button(self):
+        self.show_vid_button = tk.Button(self.window, text="Show/Hide Video", command=self.switch_show_webcam)
+        self.show_vid_button.pack(side=tk.LEFT)
+    
+    def create_run_preds_button(self):
+        self.preds_button = tk.Button(self.window, text="Play/Pause Predictions", command=self.switch_run_preds)
+        self.preds_button.pack(side=tk.LEFT)
     
     def switch_run_preds(self):
 
@@ -186,29 +198,20 @@ class App:
         else:
             self.show_webcam = False
             self.video_frame.configure(image='')
-            self.video_frame._image_cache = None
-    
-    def create_show_vid_button(self):
-        self.show_vid_button = tk.Button(self.window, text="Show/Hide Video", command=self.switch_show_webcam)
-        self.show_vid_button.pack(side=tk.LEFT)
-    
-    def create_run_preds_button(self):
-        self.preds_button = tk.Button(self.window, text="Play/Pause Predictions", command=self.switch_run_preds)
-        self.preds_button.pack(side=tk.LEFT)
-        
+            self.video_frame._image_cache = None                
+
+    # DUNDER METHODS
     def __del__(self):
         self.stop_webcam()
-        self.close_window()
+        self.window.destroy()
     
     def __exit__(self):
         self.stop_webcam()
-        self.close_window()
-    
-    def __enter__(self):
+        self.window.destroy()
+
+    def run(self):
         self.start()
-        self.start_webcam()
         self.window.mainloop()
-        return self
 
 if __name__ == '__main__':
     app = App(dummy=False)
