@@ -8,6 +8,12 @@ import numpy as np
 from dummy_model import DummyModel
 from pygame import mixer
 
+import seaborn as sns
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import pandas as pd
+sns.set(style='ticks',font_scale=1.5, rc={"lines.linewidth": 2.5})
+
 from fastai.vision.all import *
 from fastai.vision.utils import *
 
@@ -31,6 +37,8 @@ class App:
         self.model = None
         self.run_preds = True
         self.show_webcam = True
+        self.hz = 2
+        self.max_time = 60
         self.dummy = dummy
         if dummy:
             global load_learner
@@ -43,7 +51,7 @@ class App:
         self.create_show_vid_button()
         self.create_run_preds_button()
         self.create_text()
-        self.create_chart()
+        self.create_plot()
         self.load_model()
         self.start_webcam()
         self.show_frame()
@@ -67,7 +75,7 @@ class App:
     # TEXT STUFF
     def create_text(self):
         self.text = tk.Label(self.window, text="", fg="white", bg="black")
-        self.text.grid(row=0, column=0, padx=10, pady=2)
+        self.text.grid(row=0, column=1, padx=10, pady=2)
         
     def update_text(self,text):
         self.text.configure(text=text)
@@ -109,7 +117,6 @@ class App:
         self.window.after(500, self.predict)
 
     # VIDEO STUFF
-
     def create_video(self):
         self.video_frame = tk.Label(self.window, bg="black")
         self.video_frame.grid(row=1, column=0, padx=10, pady=2)
@@ -141,40 +148,55 @@ class App:
         self.video_frame._image_cache = None
         self.cap = None
     
-    # CHART STUFF
-    def create_chart(self):
-        self.chart = tk.Canvas(self.window, width=680, height=480)
-        self.chart.grid(row=1, column=1, padx=10, pady=2)
-    
-    # def create_plot(self):
-    #     # the figure that will contain the plot
-    #     fig = Figure(figsize = (5, 5),
-    #                 dpi = 100)
-    
-    #     # adding the subplot
-    #     plot1 = fig.add_subplot(111)
+    def format_preds_for_plot(self, preds):
 
-    # def plot_preds():
-    #     # plotting the graph
-    #     plot1.plot(y)
+        if len(preds) > self.max_time*self.hz:
+            preds = preds[:self.max_time*self.hz]
+        if len(preds) == 0:
+            preds = [0]
+        times = np.arange(0,len(preds)/self.hz,1/self.hz)
+        return pd.DataFrame({'times':times,'preds':preds}) 
     
-    #     # creating the Tkinter canvas
-    #     # containing the Matplotlib figure
+    def make_plot(self, df):
 
-    #     canvas = FigureCanvasTkAgg(fig,
-    #                             master = window)  
-    #     canvas.draw()
+        fig, ax = plt.subplots(figsize=(6.4,4.8),dpi=100)
+
+        sns.lineplot(
+            data=df,x='times',y='preds', ax=ax,
+            color='black',zorder=2,linewidth=1.75)
+        sns.lineplot(data=df,x='times',y='preds', color='white',zorder=1,linewidth=5)
+
+        sns.despine(left=False, bottom=False)
+        ax.set(xlabel='Time (s)',ylabel='');
+        ax.set_ylim(0,1)
+        ax.set_xlim(0,self.max_time)
+        ax.set_yticks([])
+
+        plt.text(-.02, 0.75, 'Good', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes,rotation=90)
+        plt.text(-.02, 0.25, 'Bad', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes,rotation=90)
+
+        # shade upper half of plot green
+        ax.fill_between(np.arange(0,self.max_time), .5, 1, facecolor='green', alpha=0.2, zorder=-2)
+        ax.fill_between(np.arange(0,self.max_time), 0, .5, facecolor='red', alpha=0.2, zorder=-2)
+
+        plt.tight_layout()
+
+        return fig
+
+    def create_plot(self):
+        # plotting the graph
+        fig = self.make_plot(self.format_preds_for_plot(self.pred_probs))
+            
+        # creating the Tkinter canvas containing the Matplotlib figure
+        canvas = FigureCanvasTkAgg(fig, master = self.window)  
+        canvas.draw()
+
+        plt.close(fig)
     
-    #     # placing the canvas on the Tkinter window
-    #     canvas.get_tk_widget().pack()
-    
-    #     # creating the Matplotlib toolbar
-    #     toolbar = NavigationToolbar2Tk(canvas,
-    #                                 window)
-    #     toolbar.update()
-    
-    #     # placing the toolbar on the Tkinter window
-    #     canvas.get_tk_widget().pack()
+        # placing the canvas on the Tkinter window
+        canvas.get_tk_widget().grid(row=1, column=1, padx=10, pady=2)
+
+        self.window.after(500, self.create_plot)
 
     # BUTTONS
     def create_show_vid_button(self):
