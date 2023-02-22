@@ -6,11 +6,9 @@ import numpy as np
 from dummy_model import DummyModel
 from pygame import mixer
 
-import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
-sns.set(style='ticks',font_scale=1.5, rc={"lines.linewidth": 2.5})
 
 from fastai.vision.all import *
 from fastai.vision.utils import *
@@ -32,6 +30,7 @@ class App:
         self.window = None
         self.video_frame = None
         self.pred_probs = []
+        self.pred_str = ''
         self.model = None
         self.run_preds = True
         self.show_webcam = True
@@ -48,7 +47,6 @@ class App:
         self.create_video()
         self.create_show_vid_button()
         self.create_run_preds_button()
-        self.create_text()
         self.create_plot()
         self.load_model()
         self.start_webcam()
@@ -69,14 +67,6 @@ class App:
     def play_sound(self, pred, pred_prob):
         if (pred_prob > 0.75) and (pred[0] == 'bad'):
             self.sound.play()
-
-    # TEXT STUFF
-    def create_text(self):
-        self.text = tk.Label(self.window, text="", fg="white", bg="black")
-        self.text.grid(row=0, column=1, padx=10, pady=2)
-        
-    def update_text(self,text):
-        self.text.configure(text=text)
 
     # MODEL STUFF
     def load_model(self,model_path = 'edgenext_model.pkl'):
@@ -104,13 +94,11 @@ class App:
         if (self.model) and (self.run_preds):
             pred = self.do_prediction(self.raw_frame)
             self.pred_probs.append(float(pred[2][1])) # probability of good
-            pred_str = self.create_output(pred)
+            self.pred_str = self.create_output(pred)
             self.play_sound(pred, pred[2][pred[1]])
         else:
             pred_str = "Paused"
         
-        self.update_text(pred_str)
-
         self.window.after(500, self.predict)
 
     # VIDEO STUFF
@@ -145,6 +133,7 @@ class App:
         self.video_frame._image_cache = None
         self.cap = None
     
+    # PLOT STUFF
     def format_preds_for_plot(self, preds):
 
         if len(preds) > self.max_time*self.hz:
@@ -174,6 +163,8 @@ class App:
         ax.fill_between(np.arange(0,self.max_time+1), .5, 1, facecolor='green', alpha=0.2, zorder=-2)
         ax.fill_between(np.arange(0,self.max_time+1), 0, .5, facecolor='red', alpha=0.2, zorder=-2)
         ax.fill_between(np.arange(0,self.max_time+1), 0, .2, facecolor='red', alpha=0.2, zorder=-2)
+
+        ax.set_title(self.pred_str,fontsize=16)
 
         plt.tight_layout()
 
