@@ -37,12 +37,16 @@ class App:
         self.model = None
         self.run_preds = True
         self.show_webcam = True
+        
+        self.timer = 0
         self.hz = 1
         self.pred_wait = int(1000/self.hz)
         self.max_time = 60
+        
         self.dummy = dummy
         if dummy:
             global load_learner
+        
         self.load_sound()
     
     def start(self):
@@ -61,7 +65,6 @@ class App:
         self.window = ctk.CTk()
         self.window.title("Calm Hands")
         self.window.resizable(100,100)
-        self.window.configure(background='black')
 
     # SOUND STUFF
     def load_sound(self):
@@ -98,6 +101,7 @@ class App:
         if (self.model) and (self.run_preds):
             pred = self.do_prediction(self.raw_frame)
             self.pred_probs.append(float(pred[2][1])) # probability of good
+            self.timer += 1/self.hz
             self.pred_str = self.create_output(pred)
             self.play_sound(pred, pred[2][pred[1]])
         else:
