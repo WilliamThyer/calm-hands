@@ -38,10 +38,12 @@ class App:
         self.run_preds = True
         self.show_webcam = True
         
+        # Time stuff
         self.timer = 0
-        self.hz = 1
+        self.hz = .5
         self.pred_wait = int(1000/self.hz)
-        self.max_time = 60
+        self.view_secs = 60
+        self.len_view = int(self.view_secs*self.hz)
         
         self.dummy = dummy
         if dummy:
@@ -144,11 +146,15 @@ class App:
     # PLOT STUFF
     def format_preds_for_plot(self, preds):
 
-        if len(preds) > self.max_time*self.hz:
-            preds = preds[-self.max_time*self.hz:]
+        if len(preds) > self.len_view:
+            preds = preds[-self.len_view:]
+            times = np.arange(self.timer-self.view_secs,self.timer,1/self.hz)
+            return preds, times
         if len(preds) == 0:
             preds = [0]
         times = np.arange(0,len(preds)/self.hz,1/self.hz)
+        if len(times) > len(preds):
+            times = times[:-1]
         return preds, times
     
     def make_plot(self, preds, times):
@@ -160,17 +166,22 @@ class App:
 
         ax.spines[['right', 'top']].set_visible(False)
         ax.set(xlabel='Time (s)',ylabel='');
-        ax.set_ylim(0,1)
-        ax.set_xlim(0,self.max_time)
+        ax.set_ylim(0,1.01)
         ax.set_yticks([])
+
+        if self.timer > self.view_secs:
+            ax.set_xlim(min(times),max(times))
+        else: 
+            ax.set_xlim(0,self.view_secs)
+        start, end = ax.get_xlim()
 
         plt.text(-.02, 0.75, 'Good', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes,rotation=90)
         plt.text(-.02, 0.125, 'Bad', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes,rotation=90)
 
         # shade upper half of plot green
-        ax.fill_between(np.arange(0,self.max_time+1), .5, 1, facecolor='green', alpha=0.2, zorder=-2)
-        ax.fill_between(np.arange(0,self.max_time+1), 0, .5, facecolor='red', alpha=0.2, zorder=-2)
-        ax.fill_between(np.arange(0,self.max_time+1), 0, .2, facecolor='red', alpha=0.2, zorder=-2)
+        ax.fill_between(np.arange(start,end+1), .5, 1.01, facecolor='green', alpha=0.2, zorder=-2)
+        ax.fill_between(np.arange(start,end+1), 0, .5, facecolor='red', alpha=0.2, zorder=-2)
+        ax.fill_between(np.arange(start,end+1), 0, .2, facecolor='red', alpha=0.2, zorder=-2)
 
         ax.set_title(self.pred_str,fontsize=16)
 
