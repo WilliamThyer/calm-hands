@@ -1,4 +1,7 @@
 import tkinter as tk
+import customtkinter as ctk
+ctk.set_appearance_mode('dark')
+
 import cv2
 import PIL.Image as Image, PIL.ImageTk as ImageTk
 import time
@@ -34,7 +37,8 @@ class App:
         self.model = None
         self.run_preds = True
         self.show_webcam = True
-        self.hz = 2
+        self.hz = 1
+        self.pred_wait = int(1000/self.hz)
         self.max_time = 60
         self.dummy = dummy
         if dummy:
@@ -54,7 +58,7 @@ class App:
         self.predict()
 
     def create_window(self):
-        self.window = tk.Tk()
+        self.window = ctk.CTk()
         self.window.title("Calm Hands")
         self.window.resizable(100,100)
         self.window.configure(background='black')
@@ -99,7 +103,7 @@ class App:
         else:
             pred_str = "Paused"
         
-        self.window.after(500, self.predict)
+        self.window.after(self.pred_wait, self.predict)
 
     # VIDEO STUFF
     def create_video(self):
@@ -190,11 +194,11 @@ class App:
 
     # BUTTONS
     def create_show_vid_button(self):
-        self.show_vid_button = tk.Button(self.window, text="Show/Hide Video", command=self.switch_show_webcam)
+        self.show_vid_button = ctk.CTkButton(self.window, text="Show/Hide Video", command=self.switch_show_webcam)
         self.show_vid_button.grid(row=2, column=0, padx=10, pady=2)
     
     def create_run_preds_button(self):
-        self.preds_button = tk.Button(self.window, text="Play/Pause Predictions", command=self.switch_run_preds)
+        self.preds_button = ctk.CTkButton(self.window, text="Play/Pause Predictions", command=self.switch_run_preds)
         self.preds_button.grid(row=2, column=1, padx=10, pady=2)
     
     def switch_run_preds(self):
