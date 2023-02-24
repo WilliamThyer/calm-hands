@@ -40,7 +40,7 @@ class App:
         
         # Time stuff
         self.timer = 0
-        self.hz = .5
+        self.hz = 2
         self.pred_wait = int(1000/self.hz)
         self.view_secs = 60
         self.len_view = int(self.view_secs*self.hz)
@@ -57,6 +57,7 @@ class App:
         self.create_video()
         self.create_show_vid_button()
         self.create_run_preds_button()
+        self.create_end_session_button()
         self.create_plot()
         self.load_model()
         self.start_webcam()
@@ -114,7 +115,7 @@ class App:
     # VIDEO STUFF
     def create_video(self):
         self.video_frame = tk.Label(self.window, bg="black")
-        self.video_frame.grid(row=1, column=0, padx=10, pady=2)
+        self.video_frame.grid(row=0, column=0, columnspan=2, padx=10, pady=2)
 
     def show_frame(self):
 
@@ -203,19 +204,26 @@ class App:
             plt.close(fig)
         
             # placing the canvas on the Tkinter window
-            canvas.get_tk_widget().grid(row=1, column=1, padx=10, pady=2)
+            canvas.get_tk_widget().grid(row=0, column=2, columnspan=2, padx=10, pady=2)
 
         self.window.after(1000, self.create_plot)
+    
+    def plot_final(self):
+        pass        
 
     # BUTTONS
     def create_show_vid_button(self):
         self.show_vid_button = ctk.CTkButton(self.window, text="Show/Hide Video", command=self.switch_show_webcam)
-        self.show_vid_button.grid(row=2, column=0, padx=10, pady=2)
+        self.show_vid_button.grid(row=1, column=0, padx=10, pady=2, sticky='w')
     
     def create_run_preds_button(self):
         self.preds_button = ctk.CTkButton(self.window, text="Play/Pause Predictions", command=self.switch_run_preds)
-        self.preds_button.grid(row=2, column=1, padx=10, pady=2)
-    
+        self.preds_button.grid(row=1, column=2, padx=10, pady=2, sticky='w')
+
+    def create_end_session_button(self):
+        self.end_session = ctk.CTkButton(self.window, text = "End Session", command=self.end_session)
+        self.end_session.grid(row=1, column=3, padx=10, pady=2, sticky='e')
+
     def switch_run_preds(self):
 
         if self.run_preds is False:
@@ -230,7 +238,15 @@ class App:
         else:
             self.show_webcam = False
             self.video_frame.configure(image='')
-            self.video_frame._image_cache = None                
+            self.video_frame._image_cache = None
+
+    def end_session(self):
+        
+        self.show_webcam = False
+        self.video_frame.configure(image='')
+        self.video_frame._image_cache = None
+
+        self.plot_final()
 
     # DUNDER METHODS
     def __del__(self):
