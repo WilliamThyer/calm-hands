@@ -37,6 +37,7 @@ class App:
         self.model = None
         self.run_preds = True
         self.show_webcam = True
+        self.fig = None
         
         # Time stuff
         self.timer = 0
@@ -63,6 +64,7 @@ class App:
         self.start_webcam()
         self.show_frame()
         self.predict()
+        self.update_plot()
 
     def create_window(self):
         self.window = ctk.CTk()
@@ -160,7 +162,11 @@ class App:
     
     def make_plot(self, preds, times):
 
-        fig, ax = plt.subplots(figsize=(6.4,4.8),dpi=100)
+        if self.fig is None:
+            self.fig, ax = plt.subplots(figsize=(6.4,4.8),dpi=100)
+        else:
+            ax = self.fig.axes[0]
+            ax.clear()
 
         ax.plot(times,preds,color='black',zorder=2,linewidth=1.75)
         ax.plot(times,preds, color='white',zorder=1,linewidth=5)
@@ -188,25 +194,33 @@ class App:
 
         plt.tight_layout()
 
-        return fig
-
     def create_plot(self):
+
+        if self.run_preds:
+
+            # plotting the graph
+            preds, times = self.format_preds_for_plot(self.pred_probs)
+            self.make_plot(preds, times)
+                
+            # creating the Tkinter canvas containing the Matplotlib figure
+            self.canvas = FigureCanvasTkAgg(self.fig, master = self.window)  
+            self.canvas.draw()
+
+            # placing the canvas on the Tkinter window
+            self.canvas.get_tk_widget().grid(row=0, column=2, columnspan=2, padx=10, pady=2)
+
+        # self.window.after(1000, self.create_plot)
+    
+    def update_plot(self):
 
         if self.run_preds:
             # plotting the graph
             preds, times = self.format_preds_for_plot(self.pred_probs)
-            fig = self.make_plot(preds, times)
+            self.make_plot(preds, times)
                 
-            # creating the Tkinter canvas containing the Matplotlib figure
-            canvas = FigureCanvasTkAgg(fig, master = self.window)  
-            canvas.draw()
+            self.canvas.draw_idle()
 
-            plt.close(fig)
-        
-            # placing the canvas on the Tkinter window
-            canvas.get_tk_widget().grid(row=0, column=2, columnspan=2, padx=10, pady=2)
-
-        self.window.after(1000, self.create_plot)
+        self.window.after(1000, self.update_plot)
     
     def plot_final(self):
         pass        
@@ -245,6 +259,9 @@ class App:
         self.show_webcam = False
         self.video_frame.configure(image='')
         self.video_frame._image_cache = None
+        self.run_preds = False
+        self.stop_webcam()
+        
 
         self.plot_final()
 
