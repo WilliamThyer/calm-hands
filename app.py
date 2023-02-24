@@ -10,6 +10,7 @@ from dummy_model import DummyModel
 from pygame import mixer
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
 
@@ -25,10 +26,10 @@ def label_func(self,name):
     # get label from file name (needed for fastai)
     return name.parent.name
 
-class App:
+class App():
     
     def __init__(self, dummy=False):
-        
+
         self.cap = None
         self.window = None
         self.video_frame = None
@@ -58,7 +59,8 @@ class App:
         self.create_video()
         self.create_show_vid_button()
         self.create_run_preds_button()
-        self.create_end_session_button()
+        # self.create_end_session_button()
+        self.create_len_view_menu()
         self.create_plot()
         self.load_model()
         self.start_webcam()
@@ -149,15 +151,26 @@ class App:
     # PLOT STUFF
     def format_preds_for_plot(self, preds):
 
+        # if len_view is None, plot all preds
+        if self.len_view is None:
+            return preds, np.arange(0,len(preds)/self.hz,1/self.hz)
+
+        # if preds are longer than len_view, plot last len_view preds
         if len(preds) > self.len_view:
             preds = preds[-self.len_view:]
             times = np.arange(self.timer-self.view_secs,self.timer,1/self.hz)
+            print(times)
             return preds, times
+        # if no preds, plot 0
         if len(preds) == 0:
             preds = [0]
+
         times = np.arange(0,len(preds)/self.hz,1/self.hz)
+
+        # if times has extra value, remove it 
         if len(times) > len(preds):
             times = times[:-1]
+       
         return preds, times
     
     def make_plot(self, preds, times):
@@ -176,11 +189,7 @@ class App:
         ax.set_ylim(0,1.01)
         ax.set_yticks([])
 
-        if self.timer > self.view_secs:
-            ax.set_xlim(min(times),max(times))
-        else: 
-            ax.set_xlim(0,self.view_secs)
-        start, end = ax.get_xlim()
+        ax, start, end = self.handle_xlim(ax, times)
 
         plt.text(-.02, 0.75, 'Good', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes,rotation=90)
         plt.text(-.02, 0.125, 'Bad', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes,rotation=90)
@@ -193,6 +202,18 @@ class App:
         ax.set_title(self.pred_str,fontsize=16)
 
         plt.tight_layout()
+    
+    def handle_xlim(self, ax, times):
+
+        if self.view_secs is None:
+            ax.set_xlim(min(times),max(times))
+        elif self.timer > self.view_secs:
+            ax.set_xlim(min(times),max(times))
+        else: 
+            ax.set_xlim(0,self.view_secs)
+        start, end = ax.get_xlim()
+        
+        return ax, start, end
 
     def create_plot(self):
 
@@ -209,61 +230,84 @@ class App:
             # placing the canvas on the Tkinter window
             self.canvas.get_tk_widget().grid(row=0, column=2, columnspan=2, padx=10, pady=2)
 
-        # self.window.after(1000, self.create_plot)
-    
     def update_plot(self):
 
         if self.run_preds:
             # plotting the graph
             preds, times = self.format_preds_for_plot(self.pred_probs)
+
             self.make_plot(preds, times)
                 
             self.canvas.draw_idle()
 
-        self.window.after(1000, self.update_plot)
+        self.window.after(500, self.update_plot)
     
     def plot_final(self):
-        pass        
+
+            times = np.arange(0,len(self.pred_probs)/self.hz,1/self.hz)
+
+            self.make_plot(self.pred_probs, times)
+            self.fig.axes[0].set_title('Session summary',fontsize=16)
+            self.fig.axes[0].set_xlim(0,self.timer)
+            self.canvas.draw_idle()
 
     # BUTTONS
     def create_show_vid_button(self):
-        self.show_vid_button = ctk.CTkButton(self.window, text="Show/Hide Video", command=self.switch_show_webcam)
+        self.show_vid_button = ctk.CTkButton(self.window, text="Hide Video", command=self.switch_show_webcam)
         self.show_vid_button.grid(row=1, column=0, padx=10, pady=2, sticky='w')
     
     def create_run_preds_button(self):
-        self.preds_button = ctk.CTkButton(self.window, text="Play/Pause Predictions", command=self.switch_run_preds)
+        self.preds_button = ctk.CTkButton(self.window, text="Pause Predictions", command=self.switch_run_preds)
         self.preds_button.grid(row=1, column=2, padx=10, pady=2, sticky='w')
 
-    def create_end_session_button(self):
-        self.end_session = ctk.CTkButton(self.window, text = "End Session", command=self.end_session)
-        self.end_session.grid(row=1, column=3, padx=10, pady=2, sticky='e')
+    # def create_end_session_button(self):
+    #     self.end_session = ctk.CTkButton(self.window, text = "View Session", command=self.end_session)
+    #     self.end_session.grid(row=1, column=3, padx=10, pady=2, sticky='e')
+    
+    def create_len_view_menu(self):
+
+        optionmenu_var = ctk.StringVar(value="1 m")  # set initial value
+
+        combobox = ctk.CTkOptionMenu(master=self.window,
+                                    values=["1 m", "5 m", "10 m", "Full Session"],
+                                    command=self.len_view_menu_callback,
+                                    variable=optionmenu_var)
+
+        combobox.grid(row=1, column=3, padx=10, pady=2, sticky='w')
+
+    def len_view_menu_callback(self, value):
+
+        if value == "Full Session":
+            self.view_secs = None
+            self.len_view = None
+        else:
+            self.view_secs = int(value.split()[0])*60
+            self.len_view = int(self.view_secs*self.hz) 
 
     def switch_run_preds(self):
 
         if self.run_preds is False:
             self.run_preds = True
+            self.preds_button.configure(text="Pause Predictions")
         else:
             self.run_preds = False
+            self.preds_button.configure(text="Resume Predictions")
 
     def switch_show_webcam(self):
 
         if self.show_webcam is False:
             self.show_webcam = True
+            self.show_vid_button.configure(text="Hide Video")
         else:
             self.show_webcam = False
+            self.show_vid_button.configure(text="Show Video")
             self.video_frame.configure(image='')
             self.video_frame._image_cache = None
 
-    def end_session(self):
+    # def end_session(self):
         
-        self.show_webcam = False
-        self.video_frame.configure(image='')
-        self.video_frame._image_cache = None
-        self.run_preds = False
-        self.stop_webcam()
-        
-
-        self.plot_final()
+    #     self.switch_run_preds()
+    #     self.plot_final()
 
     # DUNDER METHODS
     def __del__(self):
