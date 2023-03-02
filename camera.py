@@ -39,7 +39,7 @@ class Cam():
         while time.time() < start_time + length:
             
             frame = self.get_image()
-            self.write_image(frame,labelled_folder_path, subtitle)
+            self.write_frame(frame,labelled_folder_path, subtitle)
             time.sleep(wait)
 
             if show_cam:
