@@ -22,6 +22,8 @@ import pathlib
 temp = pathlib.PosixPath
 pathlib.PosixPath = pathlib.WindowsPath
 
+print(os.getcwd())
+
 def label_func(self,name):
     # get label from file name (needed for fastai)
     return name.parent.name
@@ -59,7 +61,6 @@ class App():
         self.create_video()
         self.create_show_vid_button()
         self.create_run_preds_button()
-        # self.create_end_session_button()
         self.create_len_view_menu()
         self.create_plot()
         self.load_model()
@@ -76,7 +77,7 @@ class App():
     # SOUND STUFF
     def load_sound(self):
         mixer.init()
-        self.sound = mixer.Sound("alert.wav")
+        self.sound = mixer.Sound('alert.wav')
     
     def play_sound(self, pred, pred_prob):
         if (pred_prob > 0.75) and (pred[0] == 'bad'):
@@ -92,10 +93,19 @@ class App():
             self.model = load_learner(model_path,cpu=True)
         print('Model loaded!')
 
-    def create_output(self,pred):
-        # create output string
-        conf = round(float(pred[2][pred[1]])*100,2) 
-        output = f'The model is {conf}% confident that you are {pred[0]}' 
+    def create_output(self,pred,output_type='basic'):
+        '''Create output string from prediction'''
+        
+        if output_type == 'basic':
+            if (pred[2][pred[1]] > 0.75) and (pred[0] == 'bad'):
+                output = 'Stop Biting!!'
+            else:
+                output = 'Good Job :)'
+        
+        elif output_type == 'full':
+            conf = round(float(pred[2][pred[1]])*100,2) 
+            output = f'The model is {conf}% confident that you are {pred[0]}' 
+        
         return output
     
     def do_prediction(self,frame):
@@ -159,7 +169,6 @@ class App():
         if len(preds) > self.len_view:
             preds = preds[-self.len_view:]
             times = np.arange(self.timer-self.view_secs,self.timer,1/self.hz)
-            print(times)
             return preds, times
         # if no preds, plot 0
         if len(preds) == 0:
@@ -259,10 +268,6 @@ class App():
     def create_run_preds_button(self):
         self.preds_button = ctk.CTkButton(self.window, text="Pause Predictions", command=self.switch_run_preds)
         self.preds_button.grid(row=1, column=2, padx=10, pady=2, sticky='w')
-
-    # def create_end_session_button(self):
-    #     self.end_session = ctk.CTkButton(self.window, text = "View Session", command=self.end_session)
-    #     self.end_session.grid(row=1, column=3, padx=10, pady=2, sticky='e')
     
     def create_len_view_menu(self):
 
@@ -303,11 +308,6 @@ class App():
             self.show_vid_button.configure(text="Show Video")
             self.video_frame.configure(image='')
             self.video_frame._image_cache = None
-
-    # def end_session(self):
-        
-    #     self.switch_run_preds()
-    #     self.plot_final()
 
     # DUNDER METHODS
     def __del__(self):
