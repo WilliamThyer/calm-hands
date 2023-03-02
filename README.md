@@ -2,7 +2,7 @@
 
 By William Thyer, 2023
 
-<img src="gui_screenshots/demo.gif" alt="drawing" width="800"/>
+<img src="gui_screenshots/app_demo.gif" alt="drawing" width="800"/>
 
 Calm Hands helps the user reduce nail-biting during computer use. It provides realtime feedback about nail-biting habits using a deep neural net that monitors images from your webcam stream. This process is entirely local and images are never saved. Feedback is provided through audio and visual cues to alert you of when you are biting your nails. Realtime data visualization is provided as well.
 
@@ -12,7 +12,7 @@ Built with: Fastai, OpenCV, Tkinter, CustomTkinter, Matplotlib.
 
 ## How I Made This
 
-### Step 1. Collect training and heldout test images 
+### Step 1. Collect training and heldout test images
 
 First I had to collect several hundred images of my biting my nails and not biting my nails (but doing other things). So I created `camera.py` and call it in `collect_training_data.ipynb`. This allowed me to collect hundreds of photos in a variety of locations, lighting setups, and angles very easily.
 
@@ -22,7 +22,7 @@ I trained an `edgenext_small` model (imported from the `timm` library) using fas
 
 ### Step 3. Collecting more data based on model mistakes
 
-I created the `realtime_model_preds.ipynb` to collect more data quickly, based on the predictions of the existing model. I moved around until I found positions that the model was incorrectly predicting. Then, I pressed either '1' or '2' on the keyboard to save that frame to the correct folder and add it to the training set. 
+I created the `realtime_model_preds.ipynb` to collect more data quickly, based on the predictions of the existing model. I moved around until I found positions that the model was incorrectly predicting. Then, I pressed either '1' or '2' on the keyboard to save that frame to the correct folder and add it to the training set.
 
 After collecting several hundred more photos, I retrained the model. Now, accuracy was exceeding 98%.
 
@@ -50,7 +50,7 @@ Secondary notebook that contains an extremely useful interface for collecting tr
 
 ### `training_calm_hands_colab.ipynb`
 
-Notebook that I ran in Google Colab to train the `edgenext_small` model. I chose `edgenext` because it is a smaller model that still has high performance. 
+Notebook that I ran in Google Colab to train the `edgenext_small` model. I chose `edgenext` because it is a smaller model that still has high performance.
 
 ### `dummy_model.ipynb`
 
