@@ -4,7 +4,7 @@ By William Thyer, 2023
 
 <img src="gui_screenshots/app_demo.gif" alt="drawing" width="800"/>
 
-Calm Hands helps the user reduce nail-biting during computer use. It provides realtime feedback about nail-biting habits using a deep neural net that monitors images from your webcam stream. This process is entirely local and images are never saved. Feedback is provided through audio and visual cues to alert you of when you are biting your nails. Realtime data visualization is provided as well.
+Calm Hands helps the user reduce nail-biting during computer use. It provides realtime feedback about nail-biting habits using a deep neural net that monitors images from your webcam stream. This process is entirely local and images are never saved. Feedback is provided through audio and visual cues to alert you of when you are biting your nails. Realtime data visualization is provided as well. Check out the blog post [here](https://williamthyer.github.io/posts/2023/3/calm-hands/).
 
 Skills: Deep learning, computer vision, data visualization, software development.
 
