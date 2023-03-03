@@ -18,7 +18,7 @@ First I had to collect several hundred images of my biting my nails and not biti
 
 ### Step 2. Train the image classifier in Google Colab with fastai
 
-I trained an `edgenext_small` model (imported from the `timm` library) using fastai. I used the proven method of finetuning a pretrained image classifier on this specific task. With ~1000 images and 3 cycles of training, I was at >90% accuracy. But I found there were specific positions and angles that the model was getting wrong.
+I trained an `edgenext_small` model (imported from the `timm` library) using fastai. I chose `edgenext` because they are small and optimized to be used locally. I used the proven method of finetuning a pretrained image classifier on this specific task. With ~1000 images and 3 cycles of training, I was at >90% accuracy. But I found there were specific positions and angles that the model was getting wrong.
 
 ### Step 3. Collecting more data based on model mistakes
 
